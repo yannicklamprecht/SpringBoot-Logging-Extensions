@@ -11,7 +11,7 @@ import java.util.List;
 
 @Plugin(name = "TestLogAppender", category = "Core", elementType = Appender.ELEMENT_TYPE)
 public class TestLogAppender extends AbstractAppender {
-    private final List<String> logMessages = Collections.synchronizedList(new ArrayList<>());
+    private final List<LogEvent> logMessages = Collections.synchronizedList(new ArrayList<>());
 
     public TestLogAppender(String name) {
         super(name, null, null, false, null);
@@ -19,10 +19,10 @@ public class TestLogAppender extends AbstractAppender {
 
     @Override
     public void append(LogEvent event) {
-        logMessages.add(event.getMessage().getFormattedMessage());
+        logMessages.add(event.toImmutable());
     }
 
-    public List<String> getLogMessages() {
+    public List<LogEvent> getLogMessages() {
         return Collections.unmodifiableList(logMessages);
     }
 

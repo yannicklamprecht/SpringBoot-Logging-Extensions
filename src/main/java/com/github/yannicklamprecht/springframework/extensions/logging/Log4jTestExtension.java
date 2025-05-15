@@ -14,6 +14,7 @@ public class Log4jTestExtension implements BeforeEachCallback, AfterEachCallback
     @Override
     public void beforeEach(ExtensionContext context) {
         Logger rootLogger = (Logger) LogManager.getRootLogger();
+        rootLogger.getContext().reconfigure();
         Configuration configuration = rootLogger.getContext().getConfiguration();
 
         // Create and add TestLogAppender
