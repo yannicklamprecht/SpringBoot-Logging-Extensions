@@ -1,41 +1,60 @@
 package com.github.yannicklamprecht.springframework.extensions.logging;
 
+import java.util.Arrays;
 import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.Appender;
 import org.apache.logging.log4j.core.Logger;
 import org.apache.logging.log4j.core.config.Configuration;
-import org.junit.jupiter.api.extension.AfterEachCallback;
+import org.apache.logging.log4j.test.appender.ListAppender;
+import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.api.extension.TestInstancePostProcessor;
 
-public class Log4jTestExtension implements BeforeEachCallback, AfterEachCallback {
+public class Log4jTestExtension implements BeforeEachCallback, AfterAllCallback, TestInstancePostProcessor {
 
-    private TestLogAppender testLogAppender;
+    private static final String APPENDER_NAME = "listAppender";
 
     @Override
-    public void beforeEach(ExtensionContext context) {
+    public void postProcessTestInstance(Object testInstance, ExtensionContext context) throws Exception {
         Logger rootLogger = (Logger) LogManager.getRootLogger();
         rootLogger.getContext().reconfigure();
         Configuration configuration = rootLogger.getContext().getConfiguration();
 
-        // Create and add TestLogAppender
-        testLogAppender = new TestLogAppender("TestLogAppender");
-        testLogAppender.start();
-        configuration.addAppender(testLogAppender);
-        rootLogger.addAppender(testLogAppender);
+
+        var listAppender = new ListAppender(APPENDER_NAME);
+        listAppender.start();
+        configuration.addAppender(listAppender);
+        rootLogger.addAppender(listAppender);
+
+        Arrays.stream(testInstance.getClass().getDeclaredFields()).filter(field -> field.getType() == ListAppender.class)
+                .forEach(field -> {
+                    field.setAccessible(true);
+                    try {
+                        field.set(testInstance, listAppender);
+                    } catch (IllegalAccessException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
     }
 
     @Override
-    public void afterEach(ExtensionContext context) {
+    public void afterAll(ExtensionContext context) throws Exception {
         Logger rootLogger = (Logger) LogManager.getRootLogger();
         Configuration configuration = rootLogger.getContext().getConfiguration();
 
+
         // Remove and stop TestLogAppender
-        rootLogger.removeAppender(testLogAppender);
-        configuration.getAppenders().remove(testLogAppender.getName());
-        testLogAppender.stop();
+        Appender appender = rootLogger.getAppenders().get(APPENDER_NAME);
+        rootLogger.removeAppender(appender);
+        configuration.getAppenders().remove(APPENDER_NAME);
+        appender.stop();
     }
 
-    public TestLogAppender getTestLogAppender() {
-        return testLogAppender;
+    @Override
+    public void beforeEach(ExtensionContext context) throws Exception {
+        Logger rootLogger = (Logger) LogManager.getRootLogger();
+        ListAppender appender = (ListAppender) rootLogger.getAppenders().get(APPENDER_NAME);
+        appender.clear();
     }
 }
