@@ -6,7 +6,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v5
       - name: Maven setup
-        uses: s4u/setup-maven-action@v1.18.0
+        uses: s4u/setup-maven-action@v1.19.0
         with:
           java-version: '17'
           java-distribution: "temurin"
