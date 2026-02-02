@@ -2,14 +2,16 @@ on: [push, pull_request]
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        maven: ["3.9.11", "4.0.0-rc-5"]
+        java: ["17", "21", "25"]
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
       - name: Maven setup
         uses: s4u/setup-maven-action@v1.19.0
         with:
-          java-version: '17'
+          java-version: ${{ matrix.java }}
           java-distribution: "temurin"
-          maven-version: "3.9.9"
+          maven-version: ${{ matrix.maven }}
       - name: Build with Maven
         run: mvn clean test install
