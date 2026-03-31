@@ -8,7 +8,7 @@ jobs:
         java: ["17", "21", "25"]
     steps:
       - name: Maven setup
-        uses: s4u/setup-maven-action@v1.19.0
+        uses: s4u/setup-maven-action@v1.20.0
         with:
           java-version: ${{ matrix.java }}
           java-distribution: "temurin"
